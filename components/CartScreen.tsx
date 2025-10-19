@@ -1,5 +1,3 @@
-
-
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useCart } from '../context/CartContext';
 import { ArrowLeft, Plus, Minus, BellRing } from 'lucide-react';
@@ -120,6 +118,7 @@ export default function CartScreen({ onBack }: CartScreenProps) {
   
   const audioControl = useRef<{ context: AudioContext; oscillator: OscillatorNode; gainNode: GainNode } | null>(null);
   const notificationRef = useRef<Notification | null>(null);
+  const vibrationIntervalRef = useRef<number | null>(null);
 
   const stopBeep = useCallback(() => {
     if (audioControl.current) {
@@ -128,9 +127,20 @@ export default function CartScreen({ onBack }: CartScreenProps) {
       audioControl.current = null;
     }
   }, []);
+  
+  const stopVibration = useCallback(() => {
+    if (vibrationIntervalRef.current) {
+      clearInterval(vibrationIntervalRef.current);
+      vibrationIntervalRef.current = null;
+    }
+    if ('vibrate' in navigator) {
+      navigator.vibrate(0);
+    }
+  }, []);
 
   const handleStopAlarm = useCallback(() => {
     stopBeep();
+    stopVibration();
     if (notificationRef.current) {
       notificationRef.current.close();
       notificationRef.current = null;
@@ -140,7 +150,7 @@ export default function CartScreen({ onBack }: CartScreenProps) {
     }
     resetOrderState();
     onBack();
-  }, [stopBeep, orderId, resetOrderState, onBack]);
+  }, [stopBeep, stopVibration, orderId, resetOrderState, onBack]);
 
   const startBeep = () => {
     if (audioControl.current || window.location.protocol !== 'https:') {
@@ -163,6 +173,16 @@ export default function CartScreen({ onBack }: CartScreenProps) {
     oscillator.start();
     audioControl.current = { context, oscillator, gainNode };
   };
+
+  const startContinuousVibration = useCallback(() => {
+    if ('vibrate' in navigator) {
+      stopVibration(); // Stop any previous vibrations
+      // Start a continuous vibration pattern
+      vibrationIntervalRef.current = window.setInterval(() => {
+        navigator.vibrate(400); // Vibrate for 400ms
+      }, 500); // Repeat every 500ms (400ms vibrate, 100ms pause)
+    }
+  }, [stopVibration]);
 
   const handleCheckout = async () => {
     if (checkoutState !== 'idle' || cartItems.length === 0) return;
@@ -222,10 +242,7 @@ export default function CartScreen({ onBack }: CartScreenProps) {
         } else if (data.status === 'ready') {
           setCheckoutState('beeping');
           startBeep();
-          
-          if ('vibrate' in navigator) {
-            navigator.vibrate([200, 100, 200, 100, 200]);
-          }
+          startContinuousVibration();
 
           const notification = new Notification("Krishna's: Order Ready!", {
             body: 'Your order is ready for pickup. Please approach the counter.',
@@ -246,8 +263,9 @@ export default function CartScreen({ onBack }: CartScreenProps) {
       if (orderId) {
         FirebaseService.stopListening(orderId);
       }
+      stopVibration();
     };
-  }, [orderId, checkoutState, orderStartTime, setCheckoutState, setOrderStartTime, handleStopAlarm]);
+  }, [orderId, checkoutState, orderStartTime, setCheckoutState, setOrderStartTime, handleStopAlarm, startContinuousVibration, stopVibration]);
 
   return (
     <div className="flex justify-center w-full min-h-screen bg-black text-white">
