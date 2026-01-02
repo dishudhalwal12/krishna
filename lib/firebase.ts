@@ -5,14 +5,14 @@ declare const firebase: any;
 // Your Firebase Configuration
 // IMPORTANT: Replace with your actual Firebase project configuration.
 const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API_KEY,
+  apiKey: "AIzaSyBiCK1asyca1Hbc_l_HW_z0a-NiCAKE9ps",
   authDomain: "krishna-e9c59.firebaseapp.com",
   databaseURL: "https://krishna-e9c59-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "krishna-e9c59",
   storageBucket: "krishna-e9c59.firebasestorage.app",
   messagingSenderId: "1048468387337",
-  appId: "1:1048468387337:web:95bd7281d40f8db4b02ad8",
-  measurementId: "G-RXF4SNS526"
+  appId: "1:1048468387337:web:be31c5de059e85bbb02ad8",
+  measurementId: "G-LKNDQ40D4N"
 };
 
 // Initialize Firebase
